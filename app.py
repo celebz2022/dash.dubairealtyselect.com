@@ -48,7 +48,7 @@ app.wsgi_app = ProxyFix(
     x_host=1,
 )
 
-APP_BUILD = "2026-09-22-private-dashboard-v1"
+APP_BUILD = "2026-09-23-whatsapp-template-param-fix-v2"
 
 app.secret_key = os.getenv(
     "FLASK_SECRET_KEY",
@@ -1175,6 +1175,15 @@ def send_template(
 
 
     try:
+
+        # Diagnostic for Railway logs. Confirms the required {{1}} parameter
+        # is present while masking the recipient phone number.
+        debug_payload = json.loads(json.dumps(payload))
+        debug_payload["to"] = "***"
+        print(
+            "WHATSAPP TEMPLATE PAYLOAD:",
+            json.dumps(debug_payload, ensure_ascii=False)
+        )
 
         response = requests.post(
 
