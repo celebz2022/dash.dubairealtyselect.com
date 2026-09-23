@@ -48,7 +48,7 @@ app.wsgi_app = ProxyFix(
     x_host=1,
 )
 
-APP_BUILD = "2026-09-23-whatsapp-template-param-fix-v2"
+APP_BUILD = "2026-09-23-webhook-status-debug-v3"
 
 app.secret_key = os.getenv(
     "FLASK_SECRET_KEY",
@@ -2912,6 +2912,16 @@ def verify_webhook():
 @app.post("/webhook")
 def webhook():
 
+    # Diagnostic logging: show every callback Meta sends us.
+    # Phone numbers and message IDs are operational data already handled
+    # by this private dashboard; never print access tokens or app secrets.
+    raw_body_for_log = request.get_data(cache=True)
+    print("WEBHOOK POST RECEIVED:", request.remote_addr, "bytes=", len(raw_body_for_log))
+    try:
+        print("WEBHOOK RAW:", raw_body_for_log.decode("utf-8", errors="replace"))
+    except Exception as log_exc:
+        print("WEBHOOK RAW LOG ERROR:", repr(log_exc))
+
     # --------------------------------------------------------
     # VERIFY META WEBHOOK SIGNATURE
     # --------------------------------------------------------
@@ -2949,10 +2959,15 @@ def webhook():
                 expected_signature
             )
         ):
+            print("WEBHOOK SIGNATURE: INVALID OR MISSING")
             return (
                 "Forbidden",
                 403
             )
+        else:
+            print("WEBHOOK SIGNATURE: OK")
+    else:
+        print("WEBHOOK SIGNATURE: SKIPPED (META_APP_SECRET not configured)")
 
 
     data = request.get_json(
@@ -3013,6 +3028,14 @@ def webhook():
                     errors = status.get(
                         "errors",
                         []
+                    )
+
+                    print(
+                        "WHATSAPP STATUS:",
+                        "status=", message_status or "<missing>",
+                        "recipient=", recipient or "<missing>",
+                        "message_id=", message_id or "<missing>",
+                        "errors=", json.dumps(errors, ensure_ascii=False) if errors else "none"
                     )
 
 
