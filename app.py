@@ -1084,7 +1084,8 @@ def download_whatsapp_media(media_id, msg_type="file", filename_hint=""):
 def send_template(
     phone,
     template_name,
-    language=None
+    language=None,
+    customer_name="there"
 ):
 
     if (
@@ -1156,7 +1157,19 @@ def send_template(
 
                 "code":
                     language
-            }
+            },
+
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [
+                        {
+                            "type": "text",
+                            "text": (customer_name or "there").strip() or "there"
+                        }
+                    ]
+                }
+            ]
         }
     }
 
@@ -1701,7 +1714,8 @@ def campaign_worker():
 
         ok, result = send_template(
             phone,
-            row["template_name"]
+            row["template_name"],
+            customer_name=row["name"] or "there"
         )
 
 
